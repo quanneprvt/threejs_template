@@ -1,1 +1,1 @@
-# pixi_game_template
+# threejs_template
