@@ -336,6 +336,7 @@ OBJLoader2.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 		// code works directly on the material references, parser clear its materials before updating
 		this.parser.setMaterials( this.materialHandler.getMaterials() );
+		// this.parser.setMaterials( {'12172_egg': new THREE.MeshPhongMaterial({color: 0xffffff})} );
 
 		if ( content instanceof ArrayBuffer || content instanceof Uint8Array ) {
 
