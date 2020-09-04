@@ -15,6 +15,9 @@ class APP
         this.raycaster;
         this.mouse = {};
         this.INTERSECTED;
+        this.currentTarget;
+        this.isMouseDown = false;
+        this.mOrigin = null;
         // this.Init();
     }
 
@@ -27,7 +30,7 @@ class APP
         this.renderer.setSize( this.width, this.height );
         document.body.appendChild( this.renderer.domElement );
 
-        // this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+        this.controls = new OrbitControls( this.camera, this.renderer.domElement );
         this.raycaster = new THREE.Raycaster();
 
         var geometry = new THREE.BoxGeometry();
@@ -47,22 +50,90 @@ class APP
 
         this.Update();
         document.addEventListener( 'mousemove', this.onDocumentMouseMove.bind(this), false );
+        document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+        document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        document.addEventListener('keydown', this.onKeyDown.bind(this), false);
+        // this.controls.enabled = false;
+    }
+
+    onKeyDown(event)
+    {
+        if (event.keyCode == 69)
+            this.controls.enabled = !this.controls.enabled;
+    }
+
+    onMouseDown(event)
+    {
+        event.preventDefault();
+        console.log('mouse down');
+        if (this.INTERSECTED)
+        {
+            this.currentTarget = this.INTERSECTED;
+            this.isMouseDown = true;
+            // this.controls.enabled = false;
+            // this.controls.rotate = false;
+            // this.controls.dispose();
+        }
+        else
+        {
+            // this.controls.enabled = true;
+            // this.controls.rotate = true;
+        }
+    }
+
+    onMouseUp(event)
+    {
+        event.preventDefault();
+        {
+            this.currentTarget = null;
+            this.isMouseDown = false;
+            this.mOrigin = null;
+            // this.controls.rotate = true;
+            // this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+        }
     }
 
     onDocumentMouseMove(event)
     {
         event.preventDefault();
         // var mouse = {};
-
+        // console.log('mouse move');
         this.mouse.x = ( event.clientX / this.width ) * 2 - 1;
-        this.mouse.y = - ( event.clientY / this.height ) * 2 + 1;
-        // console.log(mouse);
+        this.mouse.y = - ( (event.clientY - 50) / this.height ) * 2 + 1;
+        if (this.isMouseDown)
+        {
+            var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5);
+            vector.unproject( this.camera );
+            var dir = vector.sub( this.camera.position ).normalize();
+            var distance = - this.camera.position.z / dir.z;
+            var pos = this.camera.position.clone().add( dir.multiplyScalar( distance ) );
+
+            if (!this.mOrigin)
+            {
+                this.mOrigin = {};
+                this.mOrigin.x = pos.x;
+                this.mOrigin.y = pos.y;
+            }
+            else
+            {
+
+                // console.log(this.currentTarget.position, pos);
+                // this.currentTarget.position.x = pos.x;
+                // this.currentTarget.position.y = pos.y;
+                // console.log(event.clientX - this.mOrigin.x);
+                this.currentTarget.position.x += (pos.x - this.mOrigin.x);
+                this.currentTarget.position.y += (pos.y - this.mOrigin.y);
+                this.mOrigin.x = pos.x;
+                this.mOrigin.y = pos.y;
+            }
+        }
     }
 
     Update()
     {
         requestAnimationFrame( this.Update.bind(this) );
-        // this.controls.update();
+        // if (this.INTERSECTED)
+            this.controls.update();
         this.raycaster.setFromCamera( this.mouse, this.camera );
 
         var intersects = this.raycaster.intersectObjects( this.scene.children,true );
@@ -78,10 +149,11 @@ class APP
         } else {
 
             this.INTERSECTED = null;
+            // this.controls.enabled = true;
 
         }
-        if (this.INTERSECTED)
-            console.log(this.INTERSECTED);
+        // if (this.INTERSECTED)
+        //     console.log(this.INTERSECTED);
         this.light.position.copy( this.camera.getWorldPosition(this.test) );
         this.renderer.render( this.scene, this.camera );
     }
